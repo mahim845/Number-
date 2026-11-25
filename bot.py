@@ -1,3 +1,4 @@
+
 import telebot
 import requests
 import sqlite3
@@ -5,6 +6,8 @@ import re
 import html
 import time
 import threading
+import os
+from flask import Flask, jsonify
 
 from telebot import types
 from datetime import datetime
@@ -165,6 +168,34 @@ def init_db():
 
 
 init_db()
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return jsonify({
+        "status": "online",
+        "project": "BLACK MATRIX TRIBUNAL",
+        "message": "BMT Server Running"
+    })
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "healthy",
+        "server": "online"
+    })
+
+
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
 
 
 # =====================================================
@@ -1483,16 +1514,16 @@ def unknown(message):
 
 if __name__ == "__main__":
 
-    print(Font.LINE)
-    print("BLACK MATRIX TRIBUNAL")
-    print("BMT TELEGRAM BOT")
-    print("POLLING STARTED")
-    print(Font.LINE)
+    threading.Thread(
+        target=run_flask,
+        daemon=True
+    ).start()
+
+    print("BMT FLASK SERVER STARTED")
+    print("BMT TELEGRAM BOT STARTED")
 
     while True:
-
         try:
-
             bot.infinity_polling(
                 skip_pending=True,
                 timeout=30,
@@ -1500,15 +1531,8 @@ if __name__ == "__main__":
             )
 
         except KeyboardInterrupt:
-
-            print("Bot Stopped.")
             break
 
         except Exception as error:
-
-            print(
-                "Polling Error:",
-                type(error).__name__
-            )
-
+            print("Polling Error:", error)
             time.sleep(5)
